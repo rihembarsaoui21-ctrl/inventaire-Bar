@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jalta Hotel — Contrôle Stock Bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2b1f18;
+    --ink-dim:#8a7563;
+    --bg:#faf6f0;
+    --bg-2:#f1e9dd;
+    --panel:#ffffff;
+    --line:rgba(43,31,24,0.14);
+    --gold:#a8791f;
+    --wine:#7c2431;
+    --wine-bright:#932b3a;
+    --ok:#3f7a4a;
+    --ok-bg:rgba(63,122,74,0.12);
+    --bad:#b03d33;
+    --bad-bg:rgba(176,61,51,0.12);
+    --over:#a8791f;
+    --over-bg:rgba(168,121,31,0.14);
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top left, rgba(124,36,49,0.07), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:28px 18px 80px;}
+
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+    margin-bottom:22px;
+  }
+  .brand-eyebrow{
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(24px,4vw,34px);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .header-fields{display:flex;gap:16px;flex-wrap:wrap;}
+  .date-field{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+  .date-field label{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.08em;}
+  input[type=date], input[type=time], input[type=text]#responsableInput{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:8px 10px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+  }
+  input[type=text]#responsableInput{width:170px;}
+  input[type=date]:focus, input[type=time]:focus, input[type=text]#responsableInput:focus{outline:none;border-color:var(--gold);}
+
+  nav.tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:22px;
+    border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    background:none;
+    border:none;
+    color:var(--ink-dim);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    padding:10px 16px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button.active{color:var(--ink);border-bottom-color:var(--gold);}
+  nav.tabs button:hover{color:var(--ink);}
+
+  .summary-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:12px;
+    margin-bottom:24px;
+  }
+  .stat{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .stat .n{font-family:'Fraunces',serif;font-size:26px;font-weight:700;}
+  .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-dim);margin-top:2px;}
+  .stat.bad .n{color:var(--bad);}
+  .stat.over .n{color:var(--over);}
+  .stat.ok .n{color:var(--ok);}
+
+  .category{margin-bottom:26px;}
+  .category h2{
+    font-family:'Fraunces',serif;
+    font-size:18px;
+    font-weight:600;
+    color:var(--gold);
+    margin:0 0 10px;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .category h2 .add-btn{
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    color:var(--ink-dim);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:4px 10px;
+    cursor:pointer;
+  }
+  .category h2 .add-btn:hover{color:var(--ink);border-color:var(--gold);}
+
+  .table-scroll{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line);}
+  table{width:100%;border-collapse:collapse;min-width:640px;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-dim);
+    padding:10px 12px;
+    background:var(--bg-2);
+    white-space:nowrap;
+    position:sticky;top:0;
+  }
+  tbody td{
+    padding:8px 12px;
+    border-top:1px solid var(--line);
+    font-size:14px;
+    vertical-align:middle;
+    white-space:nowrap;
+  }
+  tbody tr:hover{background:rgba(244,234,217,0.03);}
+  td.name{white-space:normal;min-width:160px;font-weight:500;}
+  td.num{color:var(--ink-dim);}
+  input.cell-input{
+    width:70px;
+    background:var(--bg-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:6px 8px;
+    border-radius:6px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+  }
+  input.cell-input:focus{outline:none;border-color:var(--gold);}
+  input.comment-input{width:180px;}
+  .badge{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    min-width:42px;
+    text-align:center;
+  }
+  .badge.ok{background:var(--ok-bg);color:var(--ok);}
+  .badge.bad{background:var(--bad-bg);color:var(--bad);}
+  .badge.over{background:var(--over-bg);color:var(--over);}
+  .del-btn{
+    background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:16px;
+  }
+  .del-btn:hover{color:var(--bad);}
+
+  .actions-bar{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:14px;
+    position:sticky;
+    bottom:14px;
+  }
+  button.primary{
+    background:var(--wine);
+    color:var(--ink);
+    border:1px solid var(--wine-bright);
+    padding:12px 22px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(124,36,49,0.35);
+  }
+  button.primary:hover{background:var(--wine-bright);}
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-dim);
+    padding:12px 18px;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  button.ghost:hover{color:var(--ink);border-color:var(--gold);}
+
+  .empty{
+    text-align:center;
+    color:var(--ink-dim);
+    padding:60px 20px;
+    font-size:14px;
+  }
+  .empty .sig{font-family:'Fraunces',serif;font-size:20px;color:var(--ink);margin-bottom:8px;}
+
+  .history-list{display:flex;flex-direction:column;gap:8px;}
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    cursor:pointer;
+  }
+  .history-item:hover{border-color:var(--gold);}
+  .history-item .d{font-weight:600;}
+  .history-item .m{font-size:12px;color:var(--ink-dim);}
+  .history-click{cursor:pointer;flex:1;}
+  .hist-del-btn{
+    background:none;
+    border:none;
+    color:var(--ink-dim);
+    cursor:pointer;
+    font-size:16px;
+    padding:4px 8px;
+  }
+  .hist-del-btn:hover{color:var(--bad);}
+
+  .config-note{
+    font-size:13px;
+    color:var(--ink-dim);
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    margin-bottom:20px;
+    line-height:1.5;
+  }
+  .config-note b{color:var(--gold);}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--panel);
+    border:1px solid var(--gold);
+    color:var(--ink);
+    padding:10px 20px;
+    border-radius:8px;
+    font-size:14px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+    z-index:50;
+  }
+  .toast.show{opacity:1;}
+
+  .add-item-row td{background:var(--bg-2);}
+  .new-name-input{width:150px !important;}
+
+  @media (max-width:600px){
+    .date-field{align-items:flex-start;}
+    header.top{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow">Jalta Hotel · Bar</p>
+      <h1>Contrôle du stock</h1>
+    </div>
+    <div class="header-fields">
+      <div class="date-field">
+        <label for="reportDate">Date du contrôle</label>
+        <input type="date" id="reportDate">
+      </div>
+      <div class="date-field">
+        <label for="responsableInput">Contrôle effectué par</label>
+        <input type="text" id="responsableInput" placeholder="Nom du responsable">
+      </div>
+      <div class="date-field">
+        <label for="heureInput">Heure de l'inventaire</label>
+        <input type="time" id="heureInput">
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="today" class="active">Contrôle du jour</button>
+    <button data-tab="history">Historique</button>
+    <button data-tab="config">Configuration du stock fixe</button>
+  </nav>
+
+  <div id="tab-today"></div>
+  <div id="tab-history" style="display:none;"></div>
+  <div id="tab-config" style="display:none;"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = ["Soft","Bière","Vin Blanc","Vin Rosé","Vin Rouge","Autres"];
+
+// ============================================================
+// COLLEZ ICI L'URL DE VOTRE APPLICATION WEB GOOGLE APPS SCRIPT
+// (voir le fichier google-apps-script.gs pour les instructions)
+// Exemple : "https://script.google.com/macros/s/AKfycb.../exec"
+// ============================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbw8o_LH0FagsgmGZ_OOPjap_rmnxun495OH0VxDscPT3S2Rcmj_syi2XE_hd_1BfGgP/exec";
+
+// Charge une ressource via JSONP (contourne les restrictions CORS
+// des navigateurs, nécessaire pour parler à Google Apps Script
+// depuis une page hébergée ailleurs, ex: GitHub Pages).
+function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'cb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (data)=>{ resolve(data); cleanup(); };
+    script.onerror = ()=>{ reject(new Error('Requête réseau échouée')); cleanup(); };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+const storage = {
+  async get(key){
+    if(API_URL.indexOf('COLLEZ_VOTRE_URL') === 0){
+      throw new Error("L'URL Google Apps Script n'a pas encore été configurée");
+    }
+    const data = await jsonp(`${API_URL}?action=get&key=${encodeURIComponent(key)}`);
+    if(!data.found) throw new Error('not found');
+    return { key, value: data.value };
+  },
+  async set(key, value){
+    if(API_URL.indexOf('COLLEZ_VOTRE_URL') === 0){
+      throw new Error("L'URL Google Apps Script n'a pas encore été configurée");
+    }
+    await jsonp(`${API_URL}?action=set&key=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}`);
+    return { key, value };
+  },
+  async list(prefix){
+    if(API_URL.indexOf('COLLEZ_VOTRE_URL') === 0){
+      throw new Error("L'URL Google Apps Script n'a pas encore été configurée");
+    }
+    const data = await jsonp(`${API_URL}?action=list&prefix=${encodeURIComponent(prefix || '')}`);
+    return { keys: data.keys || [] };
+  },
+  async delete(key){
+    if(API_URL.indexOf('COLLEZ_VOTRE_URL') === 0){
+      throw new Error("L'URL Google Apps Script n'a pas encore été configurée");
+    }
+    await jsonp(`${API_URL}?action=delete&key=${encodeURIComponent(key)}`);
+    return { key, deleted: true };
+  }
+};
+
+const DEFAULT_ITEMS = [
+  ["Soft","Safia 1.5L",12],["Soft","Garci",6],["Soft","Soda Boite",12],["Soft","Tonic",12],
+  ["Soft","Shark",12],["Soft","Coca Zero Boite",6],
+
+  ["Bière","Celtia",600],["Bière","Amstel",72],["Bière","Becks",600],["Bière","Heineken",72],
+
+  ["Vin Blanc","Magon",3],["Vin Blanc","Muscat",3],["Vin Blanc","Sultan",3],["Vin Blanc","Jour et Nuit",3],
+  ["Vin Blanc","Chardonnay",3],["Vin Blanc","Magnifique",3],["Vin Blanc","Kuribis",1],["Vin Blanc","Gioia",1],
+  ["Vin Blanc","Bougène",1],["Vin Blanc","Sultan 1/2",3],["Vin Blanc","Jour et Nuit 1/2",3],
+
+  ["Vin Rosé","Magon",3],["Vin Rosé","Désir",3],["Vin Rosé","Jour et Nuit",3],["Vin Rosé","Sultan",3],
+  ["Vin Rosé","Magnifique",3],["Vin Rosé","Magon 1/2",3],["Vin Rosé","Jour et Nuit 1/2",3],
+
+  ["Vin Rouge","Magon",3],["Vin Rouge","Phenicia",1],["Vin Rouge","Magon Signature",3],["Vin Rouge","Sultan",2],
+  ["Vin Rouge","Kuribis",1],["Vin Rouge","Jour et Nuit",1],["Vin Rouge","Magnifique",3],["Vin Rouge","Gioia",1],
+  ["Vin Rouge","Vieille Cave",1],["Vin Rouge","Magon 1/2",3],
+
+  ["Autres","JW Red 50CL",2],["Autres","Vodka Absolute 1L",1],["Autres","Vodka Absolute 50CL",2],
+  ["Autres","Vodka Absolute 20CL",3]
+];
+
+let items = [];        // {id, category, name, fixedStock}
+let currentEntries = {}; // itemId -> {ventes, stockReel}
+let currentDate = new Date().toISOString().slice(0,10);
+let currentResponsable = '';
+let currentHeure = '';
+
+function uid(){ return 'i'+Math.random().toString(36).slice(2,10); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+async function loadItems(){
+  try{
+    const res = await storage.get('config:items');
+    if(res && res.value){
+      items = JSON.parse(res.value);
+      return;
+    }
+  }catch(e){ /* not found yet */ }
+  items = DEFAULT_ITEMS.map(([category,name,fixedStock])=>({id:uid(),category,name,fixedStock}));
+  await saveItems();
+}
+
+async function saveItems(){
+  try{
+    await storage.set('config:items', JSON.stringify(items));
+  }catch(e){ console.error('Erreur sauvegarde config', e); }
+}
+
+async function loadReport(date){
+  try{
+    const res = await storage.get('report:'+date);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      currentEntries = parsed.entries || {};
+      currentResponsable = parsed.responsable || '';
+      currentHeure = parsed.heure || '';
+      document.getElementById('responsableInput').value = currentResponsable;
+      document.getElementById('heureInput').value = currentHeure;
+      return;
+    }
+  }catch(e){ /* no report for this date yet */ }
+  currentEntries = {};
+  currentResponsable = '';
+  currentHeure = '';
+  document.getElementById('responsableInput').value = '';
+  document.getElementById('heureInput').value = '';
+}
+
+async function saveReport(date){
+  const payload = { date, responsable: currentResponsable, heure: currentHeure, entries: currentEntries, savedAt: new Date().toISOString() };
+  try{
+    const r = await storage.set('report:'+date, JSON.stringify(payload));
+    if(!r) throw new Error('no result');
+    showToast('Contrôle du '+formatDate(date)+' enregistré');
+  }catch(e){
+    console.error(e);
+    showToast('Erreur : la sauvegarde a échoué');
+  }
+}
+
+function formatDate(iso){
+  const [y,m,d] = iso.split('-');
+  return d+'/'+m+'/'+y;
+}
+
+function computeRow(item){
+  const e = currentEntries[item.id] || {};
+  const ventes = e.ventes !== undefined && e.ventes !== '' ? Number(e.ventes) : 0;
+  const stockReel = e.stockReel !== undefined && e.stockReel !== '' ? Number(e.stockReel) : null;
+  const attendu = item.fixedStock - ventes;
+  let ecart = null, status = null;
+  if(stockReel !== null){
+    ecart = stockReel - attendu;
+    status = ecart === 0 ? 'ok' : (ecart < 0 ? 'bad' : 'over');
+  }
+  return {ventes, stockReel, attendu, ecart, status};
+}
+
+function renderToday(){
+  const el = document.getElementById('tab-today');
+  if(items.length === 0){
+    el.innerHTML = `<div class="empty"><p class="sig">Aucun article configuré</p><p>Ajoutez vos articles et leur stock fixe dans l'onglet Configuration.</p></div>`;
+    return;
+  }
+
+  let totalManque = 0, totalSurplus = 0, totalOk = 0, totalNonCompte = 0;
+  const rowsByCategory = {};
+  CATEGORIES.forEach(c => rowsByCategory[c] = []);
+
+  items.forEach(item=>{
+    const r = computeRow(item);
+    if(r.stockReel === null) totalNonCompte++;
+    else if(r.status === 'ok') totalOk++;
+    else if(r.status === 'bad') totalManque++;
+    else if(r.status === 'over') totalSurplus++;
+    if(!rowsByCategory[item.category]) rowsByCategory[item.category] = [];
+    rowsByCategory[item.category].push({item, r});
+  });
+
+  let html = `
+    <div class="summary-row">
+      <div class="stat ok"><div class="n" id="stat-ok">${totalOk}</div><div class="l">Stock conforme</div></div>
+      <div class="stat bad"><div class="n" id="stat-bad">${totalManque}</div><div class="l">Manque détecté</div></div>
+      <div class="stat over"><div class="n" id="stat-over">${totalSurplus}</div><div class="l">Surplus</div></div>
+      <div class="stat"><div class="n" id="stat-none">${totalNonCompte}</div><div class="l">Non comptés</div></div>
+    </div>
+  `;
+
+  CATEGORIES.forEach(cat=>{
+    const rows = rowsByCategory[cat];
+    if(!rows || rows.length === 0) return;
+    html += `<div class="category"><h2>${cat}</h2><div class="table-scroll"><table>
+      <thead><tr>
+        <th>Désignation</th><th>Stock fixe</th><th>Ventes (rapport X)</th>
+        <th>Stock attendu</th><th>Stock réel compté</th><th>Écart</th><th>Commentaire</th>
+      </tr></thead><tbody>`;
+    rows.forEach(({item,r})=>{
+      const badgeHtml = r.stockReel === null
+        ? `—`
+        : `${r.ecart > 0 ? '+' : ''}${r.ecart}`;
+      const badgeClass = r.stockReel === null ? '' : r.status;
+      const commentaire = (currentEntries[item.id] && currentEntries[item.id].commentaire) || '';
+      html += `<tr data-item-id="${item.id}">
+        <td class="name">${item.name}</td>
+        <td class="num">${item.fixedStock}</td>
+        <td><input class="cell-input ventes-input" type="number" step="1" value="${r.ventes || ''}" placeholder="0"></td>
+        <td class="num" id="attendu-${item.id}">${r.attendu}</td>
+        <td><input class="cell-input stockreel-input" type="number" step="1" value="${currentEntries[item.id] && currentEntries[item.id].stockReel !== undefined ? currentEntries[item.id].stockReel : ''}" placeholder="—"></td>
+        <td><span class="badge ${badgeClass}" id="badge-${item.id}">${badgeHtml}</span></td>
+        <td><input class="cell-input comment-input" type="text" value="${commentaire.replace(/"/g,'&quot;')}" placeholder="Commentaire"></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+  });
+
+  html += `<div class="actions-bar">
+    <button class="ghost" id="resetDayBtn">Réinitialiser la saisie</button>
+    <button class="primary" id="saveDayBtn">Enregistrer le contrôle</button>
+  </div>`;
+
+  el.innerHTML = html;
+
+  el.querySelectorAll('tr[data-item-id]').forEach(tr=>{
+    const itemId = tr.getAttribute('data-item-id');
+    const item = items.find(i=>i.id===itemId);
+    const ventesInput = tr.querySelector('.ventes-input');
+    const stockReelInput = tr.querySelector('.stockreel-input');
+    const commentInput = tr.querySelector('.comment-input');
+    ventesInput.addEventListener('input', ()=>{
+      currentEntries[itemId] = currentEntries[itemId] || {};
+      currentEntries[itemId].ventes = ventesInput.value;
+      updateRowDisplay(item);
+      updateSummaryStats();
+    });
+    commentInput.addEventListener('input', ()=>{
+      currentEntries[itemId] = currentEntries[itemId] || {};
+      currentEntries[itemId].commentaire = commentInput.value;
+    });
+    stockReelInput.addEventListener('input', ()=>{
+      currentEntries[itemId] = currentEntries[itemId] || {};
+      currentEntries[itemId].stockReel = stockReelInput.value;
+      updateRowDisplay(item);
+      updateSummaryStats();
+    });
+  });
+
+  document.getElementById('saveDayBtn').addEventListener('click', ()=> saveReport(currentDate));
+  document.getElementById('resetDayBtn').addEventListener('click', ()=>{
+    if(confirm('Effacer toutes les valeurs saisies pour cette date (non encore enregistrées) ?')){
+      currentEntries = {};
+      renderToday();
+    }
+  });
+}
+
+// Updates only the computed cells for a single row (stock attendu + écart badge)
+// without rebuilding the table, so the input the user is typing in never loses focus.
+function updateRowDisplay(item){
+  const r = computeRow(item);
+  const attenduCell = document.getElementById('attendu-'+item.id);
+  const badge = document.getElementById('badge-'+item.id);
+  if(attenduCell) attenduCell.textContent = r.attendu;
+  if(badge){
+    badge.className = 'badge' + (r.stockReel === null ? '' : ' '+r.status);
+    badge.textContent = r.stockReel === null ? '—' : (r.ecart > 0 ? '+' : '')+r.ecart;
+  }
+}
+
+// Recomputes the four summary counters without touching the table/inputs.
+function updateSummaryStats(){
+  let totalOk = 0, totalManque = 0, totalSurplus = 0, totalNonCompte = 0;
+  items.forEach(item=>{
+    const r = computeRow(item);
+    if(r.stockReel === null) totalNonCompte++;
+    else if(r.status === 'ok') totalOk++;
+    else if(r.status === 'bad') totalManque++;
+    else if(r.status === 'over') totalSurplus++;
+  });
+  const setText = (id,val)=>{ const e=document.getElementById(id); if(e) e.textContent = val; };
+  setText('stat-ok', totalOk);
+  setText('stat-bad', totalManque);
+  setText('stat-over', totalSurplus);
+  setText('stat-none', totalNonCompte);
+}
+
+async function renderHistory(){
+  const el = document.getElementById('tab-history');
+  el.innerHTML = `<div class="empty"><p class="sig">Chargement…</p></div>`;
+  let keys = [];
+  try{
+    const res = await storage.list('report:');
+    keys = (res && res.keys) ? res.keys : [];
+  }catch(e){ keys = []; }
+
+  if(keys.length === 0){
+    el.innerHTML = `<div class="empty"><p class="sig">Aucun contrôle enregistré</p><p>Les contrôles sauvegardés depuis l'onglet "Contrôle du jour" apparaîtront ici.</p></div>`;
+    return;
+  }
+
+  const entries = [];
+  for(const k of keys){
+    const d = k.replace('report:','');
+    let responsable = '', heure = '';
+    try{
+      const res = await storage.get(k);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        responsable = parsed.responsable || '';
+        heure = parsed.heure || '';
+      }
+    }catch(e){ /* ignore */ }
+    entries.push({d, responsable, heure});
+  }
+  entries.sort((a,b)=> a.d < b.d ? 1 : -1);
+
+  let html = `<div class="history-list">`;
+  entries.forEach(({d, responsable, heure})=>{
+    const meta = [
+      responsable ? 'Contrôle par '+responsable : 'Responsable non renseigné',
+      heure ? 'à '+heure : ''
+    ].filter(Boolean).join(' ');
+    html += `<div class="history-item" data-date="${d}">
+      <div class="history-click" data-date="${d}"><div class="d">${formatDate(d)}</div><div class="m">${meta}</div></div>
+      <button class="hist-del-btn" data-del-date="${d}" title="Supprimer ce contrôle">✕</button>
+    </div>`;
+  });
+  html += `</div>`;
+  el.innerHTML = html;
+
+  el.querySelectorAll('.history-click').forEach(div=>{
+    div.addEventListener('click', async ()=>{
+      const d = div.getAttribute('data-date');
+      currentDate = d;
+      document.getElementById('reportDate').value = d;
+      await loadReport(d);
+      switchTab('today');
+    });
+  });
+
+  el.querySelectorAll('.hist-del-btn').forEach(btn=>{
+    btn.addEventListener('click', async (evt)=>{
+      evt.stopPropagation();
+      const d = btn.getAttribute('data-del-date');
+      if(confirm('Supprimer définitivement le contrôle du '+formatDate(d)+' ? Cette action est irréversible.')){
+        try{
+          await storage.delete('report:'+d);
+          showToast('Contrôle du '+formatDate(d)+' supprimé');
+          renderHistory();
+        }catch(err){
+          console.error(err);
+          showToast('Erreur : la suppression a échoué');
+        }
+      }
+    });
+  });
+}
+
+function renderConfig(){
+  const el = document.getElementById('tab-config');
+  let html = `<div class="config-note">
+    <b>Stock fixe</b> = quantité que le bar doit toujours avoir en début de service pour cet article.
+    Modifiez les valeurs ci-dessous si votre stock de référence change. Ces données sont partagées entre
+    tous les utilisateurs de ce lien.
+  </div>
+  <div class="actions-bar" style="justify-content:flex-start;position:static;margin-bottom:20px;">
+    <button class="ghost" id="resetListBtn">Revenir à la liste par défaut</button>
+  </div>`;
+
+  const byCategory = {};
+  CATEGORIES.forEach(c=>byCategory[c]=[]);
+  items.forEach(it=>{ if(!byCategory[it.category]) byCategory[it.category]=[]; byCategory[it.category].push(it); });
+
+  CATEGORIES.forEach(cat=>{
+    const rows = byCategory[cat] || [];
+    html += `<div class="category"><h2>${cat}<button class="add-btn" data-add-cat="${cat}">+ Ajouter un article</button></h2>
+      <div class="table-scroll"><table><thead><tr><th>Désignation</th><th>Stock fixe</th><th></th></tr></thead><tbody>`;
+    rows.forEach(item=>{
+      html += `<tr data-item-id="${item.id}">
+        <td class="name"><input class="cell-input new-name-input name-input" type="text" value="${item.name}"></td>
+        <td><input class="cell-input fixed-input" type="number" step="1" value="${item.fixedStock}"></td>
+        <td><button class="del-btn" data-del="${item.id}" title="Supprimer">✕</button></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+  });
+
+  el.innerHTML = html;
+
+  el.querySelectorAll('.name-input').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const tr = inp.closest('tr');
+      const id = tr.getAttribute('data-item-id');
+      const item = items.find(i=>i.id===id);
+      item.name = inp.value;
+      await saveItems();
+    });
+  });
+  el.querySelectorAll('.fixed-input').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const tr = inp.closest('tr');
+      const id = tr.getAttribute('data-item-id');
+      const item = items.find(i=>i.id===id);
+      item.fixedStock = Number(inp.value) || 0;
+      await saveItems();
+    });
+  });
+  el.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.getAttribute('data-del');
+      const item = items.find(i=>i.id===id);
+      if(confirm(`Supprimer "${item.name}" de la liste ?`)){
+        items = items.filter(i=>i.id!==id);
+        delete currentEntries[id];
+        await saveItems();
+        renderConfig();
+      }
+    });
+  });
+  el.querySelectorAll('[data-add-cat]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const cat = btn.getAttribute('data-add-cat');
+      items.push({id:uid(), category:cat, name:'Nouvel article', fixedStock:0});
+      await saveItems();
+      renderConfig();
+    });
+  });
+
+  document.getElementById('resetListBtn').addEventListener('click', async ()=>{
+    if(confirm('Remplacer la liste actuelle par la liste par défaut (Soft, Bière, Vin Blanc, Vin Rosé, Vin Rouge, Autres) ? Les articles ajoutés manuellement en dehors de cette liste seront supprimés.')){
+      items = DEFAULT_ITEMS.map(([category,name,fixedStock])=>({id:uid(),category,name,fixedStock}));
+      await saveItems();
+      renderConfig();
+      showToast('Liste réinitialisée');
+    }
+  });
+}
+
+function switchTab(name){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-tab')===name);
+  });
+  document.getElementById('tab-today').style.display = name==='today' ? 'block' : 'none';
+  document.getElementById('tab-history').style.display = name==='history' ? 'block' : 'none';
+  document.getElementById('tab-config').style.display = name==='config' ? 'block' : 'none';
+  if(name==='today') renderToday();
+  if(name==='history') renderHistory();
+  if(name==='config') renderConfig();
+}
+
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>switchTab(b.getAttribute('data-tab')));
+});
+
+document.getElementById('reportDate').addEventListener('change', async (e)=>{
+  currentDate = e.target.value;
+  await loadReport(currentDate);
+  renderToday();
+});
+
+document.getElementById('responsableInput').addEventListener('input', (e)=>{
+  currentResponsable = e.target.value;
+});
+
+document.getElementById('heureInput').addEventListener('input', (e)=>{
+  currentHeure = e.target.value;
+});
+
+(async function init(){
+  document.getElementById('reportDate').value = currentDate;
+  await loadItems();
+  await loadReport(currentDate);
+  renderToday();
+})();
+</script>
+</body>
+</html>
